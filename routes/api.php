@@ -21,4 +21,6 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 Route::controller(ParkingController::class)->group(function () {
     Route::post('/entry', 'entry');
+    Route::post('/oficial', 'oficial');
+    Route::post('/resident', 'resident');
 });

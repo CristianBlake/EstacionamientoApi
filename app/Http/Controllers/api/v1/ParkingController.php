@@ -44,4 +44,40 @@ class ParkingController extends Controller
             ],
         ], 200);
     }
+
+    public function oficial(Request $request)
+    {
+        $request->validate([
+            'license_plate' => ['required']
+        ]);
+
+        $oficial_car = OficialCar::create([
+            'license_plate' => $request->license_plate
+        ]);
+
+        return response()->json([
+            'message' => 'Nuevo oficial registrado con exito',
+            'car'     => [
+                'license_plate' => $oficial_car->license_plate
+            ],
+        ], 200);
+    }
+
+    public function resident(Request $request)
+    {
+        $request->validate([
+            'license_plate' => ['required']
+        ]);
+
+        $resident_car = ResidentCar::create([
+            'license_plate' => $request->license_plate
+        ]);
+
+        return response()->json([
+            'message' => 'Nuevo residente registrado con exito',
+            'car'     => [
+                'license_plate' => $resident_car->license_plate
+            ],
+        ], 200);
+    }
 }
