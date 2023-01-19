@@ -20,4 +20,9 @@ class Parking extends Model
     public $timestamps = false;
 
     protected $table = 'parking';
+
+    protected $dates = [
+        'entry',
+        'exit'
+    ];
 }

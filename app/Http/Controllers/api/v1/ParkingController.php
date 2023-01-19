@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\OficialCar;
 use App\Models\Parking;
 use App\Models\ResidentCar;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class ParkingController extends Controller
@@ -19,6 +20,8 @@ class ParkingController extends Controller
         ]);
 
         $category_id = Category::firstWhere('name', 'Visitor')->id;
+        $exit        = null;
+        $amount      = null;
 
         if ( ResidentCar::firstWhere('license_plate', $request->license_plate) )
         {
@@ -28,12 +31,16 @@ class ParkingController extends Controller
         if ( OficialCar::firstWhere('license_plate', $request->license_plate) )
         {
             $category_id = Category::firstWhere('name', 'Oficial')->id;
+            $exit        = Carbon::parse($request->entry)->addHour(2)->format('Y-m-d H:i:s');
+            $amount      = 0;
         }
 
         $parking = Parking::create([
             'license_plate' => $request->license_plate,
             'category_id'   => $category_id,
-            'entry'         => $request->entry
+            'entry'         => $request->entry,
+            'exit'          => $exit,
+            'amount'        => $amount
         ]);
 
         return response()->json([
@@ -41,6 +48,57 @@ class ParkingController extends Controller
             'car'     => [
                 'license_plate' => $parking->license_plate,
                 'entry'         => $parking->entry,
+            ],
+        ], 200);
+    }
+
+    public function exit(Request $request)
+    {
+        $request->validate([
+            'license_plate' => ['required'],
+            'exit'         => ['required']
+        ]);
+
+        $parking = Parking::firstWhere('license_plate', $request->license_plate);
+
+        if ( ResidentCar::firstWhere('license_plate', $request->license_plate) )
+        {
+            $parking->exit = $request->exit;
+            $parking->amount = $parking->entry->diffInMinutes(Carbon::parse($request->exit)) * 0.05;
+            $parking->save();
+
+            return response()->json([
+                'message' => 'Salida registrada con exito',
+                'car'     => [
+                    'license_plate' => $parking->license_plate,
+                    'exit'          => $parking->exit,
+                ],
+            ], 200);
+        }
+
+        if ( OficialCar::firstWhere('license_plate', $request->license_plate) )
+        {
+            $parking->exit = $request->exit;
+            $parking->save();
+
+            return response()->json([
+                'message' => 'Salida registrada con exito',
+                'car'     => [
+                    'license_plate' => $parking->license_plate,
+                    'exit'          => $parking->exit,
+                ],
+            ], 200);
+        }
+
+        $parking->exit = $request->exit;
+        $parking->amount = $parking->entry->diffInMinutes(Carbon::parse($request->exit)) * 0.5;
+        $parking->save();
+
+        return response()->json([
+            'message' => 'Salida registrada con exito',
+            'car'     => [
+                'license_plate' => $parking->license_plate,
+                'exit'          => $parking->exit,
             ],
         ], 200);
     }
